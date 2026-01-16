@@ -404,7 +404,6 @@
             if(isCelebrating) { snowParticles.forEach(s => { s.position.y -= s.userData.speed; if(s.position.y < -5) s.position.y = 15; }); }
             renderer.render(scene, camera);
         }
-
         window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
     </script>
 </body>
