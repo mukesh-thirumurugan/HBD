@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Priyanka's Eternal Dream 💖</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Great+Vibes&family=Quicksand:wght@500&display=swap');
+
+        body { 
+            margin: 0; overflow: hidden; 
+            background: radial-gradient(circle at center, #0a051a 0%, #020205 100%);
+            animation: nebulaPulse 10s infinite alternate;
+            font-family: 'Cinzel', serif; cursor: crosshair; 
+        }
+
+        @keyframes nebulaPulse {
+            0% { background: radial-gradient(circle at center, #0a051a 0%, #020205 100%); }
+            100% { background: radial-gradient(circle at center, #1a0a2a 0%, #050510 100%); }
+        }
+
+        canvas { display: block; }
+
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; display: flex; flex-direction: column;
+            justify-content: flex-end; align-items: center; 
+            padding-bottom: 280px; 
+            z-index: 10;
+        }
+
+        #final-wish-container {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center; width: 90%; z-index: 2000; pointer-events: none;
+        }
+
+        #final-wish {
+            font-family: 'Great Vibes', cursive; font-size: 70px; color: #fff;
+            text-shadow: 0 0 20px rgba(255, 105, 180, 0.8), 0 0 40px rgba(255, 255, 255, 0.4);
+            opacity: 0; transition: opacity 2s ease;
+            white-space: pre-wrap; 
+            line-height: 1.6;
+            display: inline-block;
+        }
+
+        .dialogue-box {
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 40px; 
+            padding: 30px 50px; text-align: center; max-width: 60%; opacity: 0; 
+            transition: opacity 1.5s ease, transform 0.1s linear;
+            pointer-events: auto;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            will-change: transform;
+        }
+
+        .dialogue-box.active { opacity: 1; }
+        #text { font-family: 'Quicksand', sans-serif; font-size: 20px; color: #ffffff; margin-bottom: 20px; font-weight: 300; letter-spacing: 1px; min-height: 1.2em; }
+
+        .btn {
+            background: #fff; color: #000; border: none; 
+            padding: 12px 40px; border-radius: 50px; font-size: 14px; font-weight: bold; 
+            cursor: pointer; pointer-events: auto; transition: 0.4s; letter-spacing: 2px;
+            box-shadow: 0 5px 15px rgba(255,255,255,0.2);
+        }
+        .btn:hover { transform: scale(1.1); box-shadow: 0 0 25px rgba(255,255,255,0.6); }
+
+        #countdown {
+            position: absolute; top: 15%; font-size: 120px; color: #ffffff;
+            font-weight: 100; display: none; opacity: 0.8;
+            text-shadow: 0 0 30px rgba(255, 105, 180, 0.5);
+        }
+
+        #scroll {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            background: #fffdfa; padding: 60px; width: 420px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8); text-align: center; 
+            pointer-events: auto; z-index: 1000; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 4px;
+        }
+
+        #scroll h1 { font-family: 'Great Vibes', cursive; font-size: 45px; color: #111; margin: 0 0 20px 0; }
+        #scroll-msg { font-family: 'Quicksand', sans-serif; font-style: italic; line-height: 1.8; color: #333; font-size: 18px; min-height: 100px; white-space: pre-wrap; }
+        
+        #music-control {
+            position: absolute; top: 30px; left: 30px; background: transparent; 
+            padding: 10px 20px; cursor: pointer; pointer-events: auto;
+            border: 1px solid rgba(255,255,255,0.2); color: white; z-index: 100; font-size: 10px; letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="music-control">ENTER THE DREAM</div>
+    
+    <div id="ui-layer">
+        <div id="final-wish-container"><div id="final-wish"></div></div>
+        <div id="countdown">5</div>
+        <div id="dialogue-box" class="dialogue-box">
+            <div id="text"></div>
+            <button class="btn" id="next-btn" style="display:none">BEGIN</button>
+        </div>
+
+        <div id="scroll">
+            <h1>Priyanka 🌹</h1>
+            <div id="scroll-msg"></div>
+            <button class="btn" id="close-scroll" style="background: #000; color: #fff; width: 100%; display:none; margin-top: 30px;">UNFOLD MEMORIES ✨</button>
+        </div>
+    </div>
+
+    <audio id="bg-music" loop>
+        <source src="https://www.bensound.com/bensound-music/bensound-memories.mp3" type="audio/mpeg">
+    </audio>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <script>
+        const PHOTOS = ["cat1.jpeg", "meow.jpeg", "meow2.jpeg"];
+        let scene, camera, renderer, cat, starGroups = [], cake, gift, flame, snowParticles = [], fireworkParticles = [];
+        let targetMouse = { x: 0, y: 0 };
+        let raycaster = new THREE.Raycaster();
+        let isCelebrating = false, trailParticles = [];
+
+        init();
+        animate();
+
+        function createStarTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64; canvas.height = 64;
+            const context = canvas.getContext('2d');
+            const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
+            gradient.addColorStop(0, 'rgba(255,255,255,1)');
+            gradient.addColorStop(0.2, 'rgba(255,255,255,0.8)');
+            gradient.addColorStop(0.5, 'rgba(255,255,255,0.2)');
+            gradient.addColorStop(1, 'rgba(255,255,255,0)');
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, 64, 64);
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x020205, 0.15);
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 1.5, 12);
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.body.appendChild(renderer.domElement);
+
+            scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+            const sunLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            sunLight.position.set(5, 10, 7);
+            scene.add(sunLight);
+
+            for(let g = 0; g < 5; g++) {
+                const starGeo = new THREE.BufferGeometry();
+                const positions = [];
+                for(let i=0; i<600; i++) positions.push((Math.random()-0.5)*100, (Math.random()-0.5)*100, (Math.random()-0.5)*100);
+                starGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+                const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.70, map: createStarTexture(), transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+                const currentStars = new THREE.Points(starGeo, starMaterial);
+                currentStars.userData = { speed: 0.001 + (Math.random() * 0.002), twinkleOffset: Math.random() * Math.PI * 2 };
+                scene.add(currentStars);
+                starGroups.push(currentStars);
+            }
+
+            const loader = new THREE.GLTFLoader();
+            loader.load('cute_cat.glb', (gltf) => {
+                cat = gltf.scene; cat.position.set(-4.5, -6, 0); cat.scale.set(1.3, 1.3, 1.3); 
+                cat.traverse((node) => { if (node.isMesh) { node.material.transparent = true; node.material.opacity = 1; } });
+                scene.add(cat);
+                typeWriter("text", "Hi Priyanka... are you ready for a dream?", () => { document.getElementById('next-btn').style.display = "inline-block"; });
+                document.getElementById('dialogue-box').classList.add('active');
+            });
+
+            window.addEventListener('mousemove', onMouseMove);
+            document.getElementById('next-btn').onclick = startStory;
+            document.getElementById('music-control').onclick = () => toggleMusic();
+            document.getElementById('close-scroll').onclick = finalCelebration;
+        }
+
+        function typeWriter(elementId, message, callback, speed = 50) {
+            let i = 0;
+            const target = document.getElementById(elementId);
+            target.innerHTML = "";
+            const timer = setInterval(() => {
+                target.innerHTML += message.charAt(i);
+                i++;
+                if (i >= message.length) { clearInterval(timer); if (callback) setTimeout(callback, 500); }
+            }, speed);
+        }
+
+        function onMouseMove(event) {
+            targetMouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            targetMouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            const starGeo = new THREE.SphereGeometry(0.06, 5, 2); 
+            const pMat = new THREE.MeshBasicMaterial({ color: 0xFFB6C1, transparent: true, blending: THREE.AdditiveBlending });
+            const p = new THREE.Mesh(starGeo, pMat);
+            const vector = new THREE.Vector3(targetMouse.x, targetMouse.y, 0.5).unproject(camera);
+            const dir = vector.sub(camera.position).normalize();
+            p.position.copy(camera.position).add(dir.multiplyScalar(8));
+            p.userData = { rotSpeed: (Math.random()-0.5)*0.2, driftX: (Math.random()-0.5)*0.03, driftY: (Math.random()-0.5)*0.03 };
+            scene.add(p); trailParticles.push({ mesh: p, life: 1.0 });
+
+            raycaster.setFromCamera(targetMouse, camera);
+            const intersects = raycaster.intersectObjects(scene.children, true);
+            
+            scene.traverse((obj) => {
+                if (obj.name === "memory_photo") gsap.to(obj.scale, { x: 1, y: 1, z: 1, duration: 0.5 });
+            });
+
+            for (let intersect of intersects) {
+                let root = intersect.object;
+                while (root.parent && root.name !== "memory_photo") { root = root.parent; }
+                if (root.name === "memory_photo") {
+                    gsap.to(root.scale, { x: 1.15, y: 1.15, z: 1.15, duration: 0.5 });
+                    break;
+                }
+            }
+        }
+
+        async function startStory() {
+            document.getElementById('next-btn').style.display = 'none';
+            toggleMusic(true);
+            gsap.to(scene.fog, { density: 0.02, duration: 4 });
+            if(cat) gsap.to(cat.position, { y: -1.0, duration: 2.5 });
+            
+            await new Promise(r => typeWriter("text", "Priyanka...", r));
+            await pause(800);
+            await new Promise(r => typeWriter("text", "They say when a soul like yours is born, the stars realign.", r));
+            await pause(1000);
+            await new Promise(r => typeWriter("text", "Before the light returns, place your deepest wish upon this flame.", r));
+            await pause(500);
+            
+            spawnCake();
+            setTimeout(() => {
+                const btn = document.getElementById('next-btn');
+                btn.innerText = "WHISPER TO THE STARS ✨"; btn.style.display = 'block';
+                btn.onclick = startCountdown;
+            }, 1000);
+        }
+
+        function spawnCake() {
+            cake = new THREE.Group(); cake.position.set(0, 1.5, 0); 
+            const layers = [{ r: 1.5, h: 0.8, color: 0xffffff },{ r: 1.52, h: 0.1, color: 0xFFD700 },{ r: 1.1, h: 0.7, color: 0xfafafa },{ r: 1.12, h: 0.1, color: 0xFFD700 },{ r: 0.7, h: 0.6, color: 0xffffff }];
+            let currentY = -2;
+            layers.forEach((data, i) => {
+                const mesh = new THREE.Mesh(new THREE.CylinderGeometry(data.r, data.r, data.h, 32), new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.3 }));
+                mesh.position.y = currentY + (data.h / 2); currentY += data.h;
+                mesh.scale.set(0, 0, 0); cake.add(mesh);
+                gsap.to(mesh.scale, { x: 1, y: 1, z: 1, delay: i * 0.15, duration: 1.2, ease: "back.out(1.7)" });
+            });
+            const candle = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.8, 16), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+            candle.position.y = currentY + 0.4; cake.add(candle);
+            flame = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffaa00 }));
+            flame.position.y = candle.position.y + 0.5; cake.add(flame);
+            scene.add(cake);
+        }
+
+        function startCountdown() {
+            document.getElementById('next-btn').style.display = 'none';
+            const counter = document.getElementById('countdown');
+            counter.style.display = 'block';
+            let count = 5;
+            const interval = setInterval(() => {
+                count--; counter.innerText = count;
+                if(count === 0) { 
+                    clearInterval(interval); counter.style.display = 'none'; 
+                    if(flame) flame.visible = false; 
+                    createHeartBlast(); onBlowOut(); 
+                }
+            }, 1000);
+        }
+
+        function createHeartBlast() {
+            const colors = [0xFF69B4, 0xFF1493, 0xFFB6C1, 0xFFFFFF];
+            for (let i = 0; i < 150; i++) {
+                const p = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), new THREE.MeshBasicMaterial({ color: colors[Math.floor(Math.random()*colors.length)], transparent: true }));
+                const t = Math.random() * Math.PI * 2;
+                const x = 16 * Math.pow(Math.sin(t), 3);
+                const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+                p.position.set(0, 2, 0);
+                const targetPos = new THREE.Vector3(x * 0.15, y * 0.15 + 2, (Math.random()-0.5)*2);
+                p.userData = { vel: targetPos.clone().sub(p.position).multiplyScalar(0.05), life: 1.0 };
+                scene.add(p); fireworkParticles.push(p);
+            }
+        }
+
+        async function onBlowOut() { 
+            await pause(1000);
+            spawnGift(); 
+        }
+
+        function spawnGift() {
+            if(cake) gsap.to(cake.position, { y: -12, duration: 2 });
+            gift = new THREE.Group();
+            const box = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.8, 1.8), new THREE.MeshStandardMaterial({ color: 0xffffff })); gift.add(box);
+            const ribbonMat = new THREE.MeshStandardMaterial({ color: 0xFFD700 });
+            gift.add(new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.85, 1.85), ribbonMat));
+            gift.add(new THREE.Mesh(new THREE.BoxGeometry(1.85, 1.85, 0.4), ribbonMat));
+            gift.position.set(0, 0.5, 0); gift.scale.set(0,0,0); scene.add(gift);
+            gsap.to(gift.scale, { x: 1, y: 1, z: 1, duration: 1.2, ease: "elastic.out(1, 0.5)" });
+            typeWriter("text", "Touch the gift to reveal your world...", null);
+            window.addEventListener('mousedown', giftClickCheck);
+        }
+
+        function giftClickCheck() {
+            const rayMouse = new THREE.Vector2(targetMouse.x, targetMouse.y);
+            raycaster.setFromCamera(rayMouse, camera);
+            if(gift && raycaster.intersectObjects(gift.children).length > 0) {
+                window.removeEventListener('mousedown', giftClickCheck);
+                gsap.to(gift.scale, { x: 0, y: 0, z: 0, duration: 0.8, onComplete: openSurprise });
+            }
+        }
+
+        function openSurprise() { 
+            document.getElementById('scroll').style.transform = "translate(-50%, -50%) scale(1)";
+            typeWriter("scroll-msg", "In a gallery of infinite stars, you are the masterpiece. May your journey be as beautiful as the light you give to others. Today, the universe celebrates You.", () => {
+                document.getElementById('close-scroll').style.display = "block";
+            }, 60);
+        }
+
+        async function finalCelebration() {
+            document.getElementById('scroll').style.transform = "translate(-50%, -50%) scale(0)";
+            document.getElementById('dialogue-box').style.display = "none";
+            if (cat) gsap.to(cat.scale, { x: 0, y: 0, z: 0, duration: 2 });
+
+            const loader = new THREE.TextureLoader();
+            PHOTOS.forEach((url, i) => {
+                const photoGroup = new THREE.Group();
+                photoGroup.name = "memory_photo";
+
+                loader.load(url, (texture) => {
+                    const aspect = texture.image.width / texture.image.height;
+                    const photoW = 3; const photoH = 3 / aspect;
+
+                    const pic = new THREE.Mesh(new THREE.PlaneGeometry(photoW, photoH), new THREE.MeshBasicMaterial({ map: texture, transparent: true, opacity: 0, side: THREE.DoubleSide }));
+                    const frame = new THREE.Mesh(new THREE.PlaneGeometry(photoW + 0.2, photoH + 0.7), new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0 }));
+                    frame.position.set(0, -0.2, -0.02);
+                    
+                    const glow = new THREE.Mesh(new THREE.PlaneGeometry(photoW + 1, photoH + 1), new THREE.MeshBasicMaterial({ color: 0xFFB6C1, transparent: true, opacity: 0, blending: THREE.AdditiveBlending }));
+                    glow.position.z = -0.05;
+
+                    photoGroup.add(pic, frame, glow);
+                    photoGroup.position.set(i === 0 ? -5 : (i === 1 ? 5 : 0), i === 2 ? 4.5 : 1.5, 0);
+                    photoGroup.rotation.z = (Math.random() - 0.5) * 0.2;
+                    scene.add(photoGroup);
+
+                    gsap.to([pic.material, frame.material], { opacity: 1, duration: 2 });
+                    gsap.to(glow.material, { opacity: 0.3, duration: 3 });
+                    gsap.to(photoGroup.position, { y: photoGroup.position.y + 0.4, duration: 2.5 + Math.random(), repeat: -1, yoyo: true, ease: "sine.inOut" });
+                });
+            });
+
+            isCelebrating = true;
+            for(let i=0; i<150; i++) {
+                const snow = new THREE.Mesh(new THREE.SphereGeometry(0.04), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 }));
+                snow.position.set((Math.random()-0.5)*25, Math.random()*20, (Math.random()-0.5)*15);
+                snow.userData = { speed: 0.02 + Math.random()*0.03, drift: (Math.random()-0.5)*0.01 };
+                scene.add(snow); snowParticles.push(snow);
+            }
+            await typeWriterCenter("You are my favorite person, \n Priyanka ❤️");
+        }
+
+        function typeWriterCenter(message) {
+            return new Promise((resolve) => {
+                let i = 0; const target = document.getElementById('final-wish'); 
+                target.style.opacity = "1"; target.innerText = "";
+                const timer = setInterval(() => {
+                    target.textContent += message.charAt(i); i++;
+                    if (i >= message.length) { clearInterval(timer); setTimeout(resolve, 500); }
+                }, 100);
+            });
+        }
+
+        // Replaced talk with a simple timer to keep story flow
+        function pause(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+        
+        function toggleMusic(play = false) { const audio = document.getElementById('bg-music'); if(play || audio.paused) audio.play(); else audio.pause(); }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = Date.now() * 0.002;
+            starGroups.forEach(group => { 
+                group.rotation.y += 0.0001; 
+                group.material.opacity = 0.6 + Math.sin(time + group.userData.twinkleOffset) * 0.4;
+            });
+
+            const floatY = Math.sin(Date.now() * 0.002) * 10;
+            document.getElementById('dialogue-box').style.transform = `translateY(${floatY}px)`;
+            if(cat && cat.scale.x > 0.01) cat.position.y += Math.sin(Date.now()*0.001)*0.003;
+            if(gift) { gift.position.y = 0.5 + Math.sin(Date.now()*0.002)*0.3; gift.rotation.y += 0.01; }
+            for (let i = fireworkParticles.length - 1; i >= 0; i--) {
+                const p = fireworkParticles[i]; p.position.add(p.userData.vel); p.userData.life -= 0.01; p.material.opacity = p.userData.life;
+                if (p.userData.life <= 0) { scene.remove(p); fireworkParticles.splice(i, 1); }
+            }
+            for (let i = trailParticles.length - 1; i >= 0; i--) {
+                const p = trailParticles[i]; p.life -= 0.015; p.mesh.material.opacity = p.life; p.mesh.scale.set(p.life, p.life, p.life);
+                if (p.life <= 0) { scene.remove(p.mesh); trailParticles.splice(i, 1); }
+            }
+            if(isCelebrating) { snowParticles.forEach(s => { s.position.y -= s.userData.speed; if(s.position.y < -5) s.position.y = 15; }); }
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+    </script>
+</body>
+</html>
